@@ -6,6 +6,7 @@ from io import BytesIO
 from openpyxl.styles import Alignment
 from openpyxl import load_workbook
 import streamlit.components.v1 as components
+from collections import defaultdict
 
 st.set_page_config(page_title="AEM URL Converter", page_icon="🌍", layout="wide")
 
@@ -19,7 +20,7 @@ LANGUAGE_MAP = {
     "ja-JP": "/content/lifetech/japan/en-jp",
     "ko-KR": "/content/lifetech/ipac/en-kr",
     "zh-CN": "/content/lifetech/greater-china/en-cn",
-    "zh-TW": "/content/lifetech/ipac/en-tw",  # ✅ corrected
+    "zh-TW": "/content/lifetech/ipac/en-tw",
     "pt-BR": "/content/lifetech/latin-america/en-br",
     "es-LATAM": "/content/lifetech/latin-america/en-mx"
 }
@@ -78,18 +79,23 @@ if uploaded_file:
         else:
             st.success("✅ URLs converted successfully!")
 
+            grouped = defaultdict(list)
+            for _, row in df_result.iterrows():
+                grouped[row["Language"]].append(row["Localized Path"])
+
             st.markdown("### 🔗 Localized URLs")
-            for idx, row in df_result.iterrows():
-                cols = st.columns([1, 5, 1])
-                cols[0].markdown(f"**{row['Language']}**")
-                cols[1].code(row['Localized Path'], language="bash")
-                copy_script = f"""
-                <button onclick="navigator.clipboard.writeText('{row['Localized Path']}')"
-                        style="padding:5px 10px; background-color:#2E86C1; color:white; border:none; border-radius:5px;">
-                    📋 Copy
-                </button>
-                """
-                components.html(copy_script, height=40)
+            for lang, urls in grouped.items():
+                with st.expander(f"{lang} ({len(urls)} URLs)", expanded=False):
+                    for url in urls:
+                        cols = st.columns([6, 1])
+                        cols[0].code(url, language="bash")
+                        copy_button = f"""
+                        <button onclick="navigator.clipboard.writeText('{url}')"
+                                style="padding:4px 10px; background-color:#2E86C1; color:white; border:none; border-radius:5px;">
+                            📋 Copy
+                        </button>
+                        """
+                        components.html(copy_button, height=35)
 
             output = BytesIO()
             with pd.ExcelWriter(output, engine="openpyxl") as writer:
