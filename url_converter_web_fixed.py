@@ -77,6 +77,7 @@ if uploaded_file:
             st.warning("⚠️ No valid data found in the uploaded file.")
         else:
             st.success("✅ URLs converted successfully!")
+            st.dataframe(df_result, use_container_width=True)
 
             output = BytesIO()
             with pd.ExcelWriter(output, engine="openpyxl") as writer:
