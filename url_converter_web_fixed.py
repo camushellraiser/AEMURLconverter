@@ -59,6 +59,7 @@ def process_file(uploaded_file):
                 localized_base = LANGUAGE_MAP.get(lang_code)
                 if localized_base:
                     results.append({
+                        "Original URL": original_url,
                         "Language": lang_code,
                         "Localized Path": localized_base + cleaned_path
                     })
