@@ -5,9 +5,8 @@ from urllib.parse import urlparse
 from io import BytesIO
 from openpyxl.styles import Alignment
 from openpyxl import load_workbook
-import tempfile
 
-st.set_page_config(page_title="AEM URL Converter", page_icon="🌍", layout="centered")
+st.set_page_config(page_title="AEM URL Converter", page_icon="🌍", layout="wide")
 
 st.markdown("<h1 style='text-align: center; color: #2E86C1;'>🌍 AEM URL Converter</h1>", unsafe_allow_html=True)
 st.markdown("Upload a Web Translation Excel file to convert AEM URLs based on target languages.")
@@ -19,7 +18,7 @@ LANGUAGE_MAP = {
     "ja-JP": "/content/lifetech/japan/en-jp",
     "ko-KR": "/content/lifetech/ipac/en-kr",
     "zh-CN": "/content/lifetech/greater-china/en-cn",
-    "zh-TW": "/content/lifetech/ipac/en-tw",  # ✅ corrected
+    "zh-TW": "/content/lifetech/ipac/en-tw",
     "pt-BR": "/content/lifetech/latin-america/en-br",
     "es-LATAM": "/content/lifetech/latin-america/en-mx"
 }
@@ -60,7 +59,6 @@ def process_file(uploaded_file):
                 localized_base = LANGUAGE_MAP.get(lang_code)
                 if localized_base:
                     results.append({
-                        "Original URL": original_url,
                         "Language": lang_code,
                         "Localized Path": localized_base + cleaned_path
                     })
@@ -77,23 +75,20 @@ if uploaded_file:
             st.warning("⚠️ No valid data found in the uploaded file.")
         else:
             st.success("✅ URLs converted successfully!")
-            st.dataframe(df_result, use_container_width=True)
+            st.markdown("### 🔗 Localized URLs (select and copy supported)")
+            st.table(df_result)
 
             output = BytesIO()
             with pd.ExcelWriter(output, engine="openpyxl") as writer:
                 df_result.to_excel(writer, index=False)
                 worksheet = writer.sheets["Sheet1"]
-                worksheet.column_dimensions["A"].width = 60
-                worksheet.column_dimensions["B"].width = 20
-                worksheet.column_dimensions["C"].width = 80
+                worksheet.column_dimensions["A"].width = 20
+                worksheet.column_dimensions["B"].width = 80
                 for row in worksheet.iter_rows():
                     for cell in row:
                         cell.alignment = Alignment(wrap_text=True, vertical="top")
                 for cell in worksheet[1]:
                     cell.alignment = Alignment(horizontal="center", vertical="center")
-                for row in worksheet.iter_rows(min_row=2, min_col=2, max_col=2):
-                    for cell in row:
-                        cell.alignment = Alignment(horizontal="center", vertical="top")
 
             st.download_button(
                 label="📥 Download Converted Excel",
