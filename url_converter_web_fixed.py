@@ -80,6 +80,7 @@ if uploaded_file:
 
             # Estilo web: centrar encabezados y columna Language
             styled_df = df_result.style                 .set_properties(subset=["Language"], **{"text-align": "center"})                 .set_table_styles([
+                    {"selector": "thead th", "props": [("text-align", "center")]}
                     {"selector": "th", "props": [("text-align", "center")]}
                 ])
 
