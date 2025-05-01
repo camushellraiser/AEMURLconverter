@@ -79,7 +79,8 @@ if uploaded_file:
             st.markdown("### 🔗 Localized URLs (select and copy supported)")
 
             # Apply styling for web view
-            styled_df = df_result.style.set_properties(subset=["Language"], **{"text-align": "center"})
+            styled_df = df_result.style.set_properties(subset=["Language"], **{"text-align": "center"}) \
+    .set_table_styles([{"selector": "th", "props": [("text-align", "center")]}])
             st.dataframe(styled_df, use_container_width=True)
 
             # Prepare Excel file with formatting
