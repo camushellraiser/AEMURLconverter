@@ -1,11 +1,17 @@
-from openpyxl.styles import Alignment
-import tkinter as tk
-from tkinter import filedialog, messagebox
+
+import streamlit as st
 import pandas as pd
 from urllib.parse import urlparse
-import os
+from io import BytesIO
+from openpyxl.styles import Alignment
+from openpyxl import load_workbook
+import tempfile
 
-# Mapeo de idioma a ruta
+st.set_page_config(page_title="AEM URL Converter", page_icon="🌍", layout="centered")
+
+st.markdown("<h1 style='text-align: center; color: #2E86C1;'>🌍 AEM URL Converter</h1>", unsafe_allow_html=True)
+st.markdown("Upload a Web Translation Excel file to convert AEM URLs based on target languages.")
+
 LANGUAGE_MAP = {
     "de-DE": "/content/lifetech/europe/en-de",
     "es-ES": "/content/lifetech/europe/en-es",
@@ -13,7 +19,7 @@ LANGUAGE_MAP = {
     "ja-JP": "/content/lifetech/japan/en-jp",
     "ko-KR": "/content/lifetech/ipac/en-kr",
     "zh-CN": "/content/lifetech/greater-china/en-cn",
-    "zh-TW": "/content/lifetech/ipac/en-tw",
+    "zh-TW": "/content/lifetech/ipac/en-tw",  # ✅ corrected
     "pt-BR": "/content/lifetech/latin-america/en-br",
     "es-LATAM": "/content/lifetech/latin-america/en-mx"
 }
@@ -36,8 +42,8 @@ def detect_first_url(row):
             return cell
     return None
 
-def process_file(file_path):
-    df = pd.read_excel(file_path, sheet_name=0, header=3)
+def process_file(uploaded_file):
+    df = pd.read_excel(uploaded_file, sheet_name=0, header=3)
     results = []
 
     language_columns = {col: code for code, path in LANGUAGE_MAP.items() for col in df.columns if code in str(col)}
@@ -62,16 +68,18 @@ def process_file(file_path):
     result_df = pd.DataFrame(results)
     return result_df.sort_values(by=["Language"]) if not result_df.empty else pd.DataFrame()
 
-def browse_file():
-    file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx")])
-    if file_path:
-        try:
-            df_result = process_file(file_path)
-            if df_result.empty:
-                messagebox.showwarning("No Data", "No valid data found in the file.")
-            else:
-                                        output_path = os.path.splitext(file_path)[0] + "_converted.xlsx"
-            with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
+uploaded_file = st.file_uploader("📂 Upload Excel File", type=["xlsx"])
+
+if uploaded_file:
+    try:
+        df_result = process_file(uploaded_file)
+        if df_result.empty:
+            st.warning("⚠️ No valid data found in the uploaded file.")
+        else:
+            st.success("✅ URLs converted successfully!")
+
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine="openpyxl") as writer:
                 df_result.to_excel(writer, index=False)
                 worksheet = writer.sheets["Sheet1"]
                 worksheet.column_dimensions["A"].width = 60
@@ -86,16 +94,11 @@ def browse_file():
                     for cell in row:
                         cell.alignment = Alignment(horizontal="center", vertical="top")
 
-            messagebox.showinfo("✅ Success", f"File saved to:\n{output_path}")
-        except Exception as e:
-            messagebox.showerror("❌ Error", str(e))
-
-root = tk.Tk()
-root.title("🌍 AEM - URL Converter")
-root.geometry("400x200")
-root.configure(bg="#f2f2f2")
-
-button = tk.Button(root, text="📂 Browse Excel File", command=browse_file, height=2, width=30)
-button.pack(pady=60)
-
-root.mainloop()
+            st.download_button(
+                label="📥 Download Converted Excel",
+                data=output.getvalue(),
+                file_name="converted_urls.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+    except Exception as e:
+        st.error(f"❌ An error occurred: {e}")
