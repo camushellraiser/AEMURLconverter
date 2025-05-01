@@ -5,10 +5,9 @@ from urllib.parse import urlparse
 from io import BytesIO
 from openpyxl.styles import Alignment
 from openpyxl import load_workbook
-import streamlit.components.v1 as components
-from collections import defaultdict
+import tempfile
 
-st.set_page_config(page_title="AEM URL Converter", page_icon="🌍", layout="wide")
+st.set_page_config(page_title="AEM URL Converter", page_icon="🌍", layout="centered")
 
 st.markdown("<h1 style='text-align: center; color: #2E86C1;'>🌍 AEM URL Converter</h1>", unsafe_allow_html=True)
 st.markdown("Upload a Web Translation Excel file to convert AEM URLs based on target languages.")
@@ -20,7 +19,7 @@ LANGUAGE_MAP = {
     "ja-JP": "/content/lifetech/japan/en-jp",
     "ko-KR": "/content/lifetech/ipac/en-kr",
     "zh-CN": "/content/lifetech/greater-china/en-cn",
-    "zh-TW": "/content/lifetech/ipac/en-tw",
+    "zh-TW": "/content/lifetech/ipac/en-tw",  # ✅ corrected
     "pt-BR": "/content/lifetech/latin-america/en-br",
     "es-LATAM": "/content/lifetech/latin-america/en-mx"
 }
@@ -78,24 +77,7 @@ if uploaded_file:
             st.warning("⚠️ No valid data found in the uploaded file.")
         else:
             st.success("✅ URLs converted successfully!")
-
-            grouped = defaultdict(list)
-            for _, row in df_result.iterrows():
-                grouped[row["Language"]].append(row["Localized Path"])
-
-            st.markdown("### 🔗 Localized URLs")
-            for lang, urls in grouped.items():
-                with st.expander(f"{lang} ({len(urls)} URLs)", expanded=False):
-                    for url in urls:
-                        cols = st.columns([6, 1])
-                        cols[0].code(url, language="bash")
-                        copy_button = f"""
-                        <button onclick="navigator.clipboard.writeText('{url}')"
-                                style="padding:4px 10px; background-color:#2E86C1; color:white; border:none; border-radius:5px;">
-                            📋 Copy
-                        </button>
-                        """
-                        components.html(copy_button, height=35)
+            st.dataframe(df_result, use_container_width=True)
 
             output = BytesIO()
             with pd.ExcelWriter(output, engine="openpyxl") as writer:
