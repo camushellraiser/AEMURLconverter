@@ -76,41 +76,37 @@ if uploaded_file:
             st.warning("⚠️ No valid data found in the uploaded file.")
         else:
             st.success("✅ URLs converted successfully!")
-            st.markdown("### 🔗 Localized URLs (copy and paste supported)")
+            st.markdown("### 🔗 Localized URLs")
 
-            # Estilo web: centrar encabezados y columna Language
-            styled_df = df_result.style                 .set_properties(subset=["Language"], **{"text-align": "center"})                 .set_table_styles([
-                    {"selector": "thead th", "props": [("text-align", "center")]}
-                    {"selector": "th", "props": [("text-align", "center")]}
-                ])
+            # Apply center to header and 'Language' column in web
+            styled_df = df_result.style.set_properties(
+                subset=["Language"], **{"text-align": "center"}
+            ).set_table_styles([
+                {"selector": "th", "props": [("text-align", "center")]}
+            ])
 
             st.dataframe(styled_df, use_container_width=True)
 
-            # Crear Excel con formato mejorado
             output = BytesIO()
             with pd.ExcelWriter(output, engine="openpyxl") as writer:
                 df_result.to_excel(writer, index=False)
                 worksheet = writer.sheets["Sheet1"]
                 worksheet.freeze_panes = "A2"
 
-                # Anchura de columnas
                 worksheet.column_dimensions["A"].width = 60
                 worksheet.column_dimensions["B"].width = 15
                 worksheet.column_dimensions["C"].width = 65
 
-                # Estilo de encabezado
                 header_fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
                 header_font = Font(bold=True)
 
                 for row_idx, row in enumerate(worksheet.iter_rows(), start=1):
                     for col_idx, cell in enumerate(row, start=1):
-                        # Encabezados
                         if row_idx == 1:
                             cell.fill = header_fill
                             cell.font = header_font
                             cell.alignment = Alignment(horizontal="center", vertical="center")
                         else:
-                            # Datos
                             if col_idx == 2:
                                 cell.alignment = Alignment(horizontal="center", vertical="top")
                             else:
