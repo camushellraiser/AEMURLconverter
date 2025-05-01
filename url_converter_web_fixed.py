@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 from io import BytesIO
 from openpyxl.styles import Alignment
 from openpyxl import load_workbook
-import tempfile
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="AEM URL Converter", page_icon="🌍", layout="centered")
 
@@ -77,7 +77,18 @@ if uploaded_file:
             st.warning("⚠️ No valid data found in the uploaded file.")
         else:
             st.success("✅ URLs converted successfully!")
-            st.dataframe(df_result, use_container_width=True)
+
+            # Display DataFrame with copy buttons
+            for idx, row in df_result.iterrows():
+                st.write(f"**Language:** {row['Language']}")
+                st.code(row['Localized Path'], language="bash")
+                copy_script = f"""
+                <button onclick="navigator.clipboard.writeText('{row['Localized Path']}')"
+                        style="padding:5px 10px; background-color:#2E86C1; color:white; border:none; border-radius:5px;">
+                    📋 Copy to Clipboard
+                </button>
+                """
+                components.html(copy_script, height=40)
 
             output = BytesIO()
             with pd.ExcelWriter(output, engine="openpyxl") as writer:
