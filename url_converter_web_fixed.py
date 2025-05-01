@@ -89,7 +89,7 @@ if uploaded_file:
                     📋 Copy
                 </button>
                 """
-                cols[2].components.html(copy_script, height=40)
+                components.html(copy_script, height=40)
 
             output = BytesIO()
             with pd.ExcelWriter(output, engine="openpyxl") as writer:
