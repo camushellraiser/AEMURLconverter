@@ -77,11 +77,26 @@ if uploaded_file:
         else:
             st.success("✅ URLs converted successfully!")
             st.markdown("### 🔗 Localized URLs (select and copy supported)")
-            st.table(df_result)
+            df_result_style = df_result.style.set_properties(subset=["Language"], **{"text-align": "center"})
+            st.table(df_result_style)
 
             output = BytesIO()
             with pd.ExcelWriter(output, engine="openpyxl") as writer:
                 df_result.to_excel(writer, index=False)
+                worksheet = writer.sheets["Sheet1"]
+                worksheet.freeze_panes = "A2"
+                worksheet.column_dimensions["A"].width = 80
+                worksheet.column_dimensions["B"].width = 15
+                worksheet.column_dimensions["C"].width = 90
+                for row in worksheet.iter_rows():
+                    for cell in row:
+                        cell.alignment = Alignment(wrap_text=True, vertical="top")
+                for cell in worksheet[1]:
+                    cell.alignment = Alignment(horizontal="center", vertical="center")
+                    cell.font = cell.font.copy(bold=True)
+                for row in worksheet.iter_rows(min_row=2, min_col=2, max_col=2):
+                    for cell in row:
+                        cell.alignment = Alignment(horizontal="center", vertical="top")
                 worksheet = writer.sheets["Sheet1"]
                 worksheet.column_dimensions["A"].width = 20
                 worksheet.column_dimensions["B"].width = 80
